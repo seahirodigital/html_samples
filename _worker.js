@@ -58,12 +58,13 @@ function projectFromRequest(request, payload) {
   return DEFAULT_PROJECT;
 }
 
-function githubUrl(project, filename) {
-  return `https://api.github.com/repos/${REPOSITORY}/contents/${encodeURIComponent(project)}/${encodeURIComponent(filename)}`;
+function githubUrl(project, filename, ref) {
+  const base = `https://api.github.com/repos/${REPOSITORY}/contents/${encodeURIComponent(project)}/${encodeURIComponent(filename)}`;
+  return ref ? `${base}?ref=${encodeURIComponent(ref)}` : base;
 }
 
-async function githubGet(project, filename, token) {
-  const response = await fetch(githubUrl(project, filename), {
+async function githubGet(project, filename, token, ref) {
+  const response = await fetch(githubUrl(project, filename, ref), {
     headers: githubHeaders(token),
   });
   if (!response.ok) {
@@ -101,13 +102,98 @@ async function saveOne(project, filename, source, token) {
   return { filename, changed: true, commit: result.commit?.sha || null };
 }
 
-async function listHtml(project, token) {
-  const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/contents/${encodeURIComponent(project)}?ref=${encodeURIComponent(BRANCH)}`, {
+async function listHtml(project, token, ref = BRANCH) {
+  const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/contents/${encodeURIComponent(project)}?ref=${encodeURIComponent(ref)}`, {
     headers: githubHeaders(token),
   });
   if (!response.ok) throw new Error(`GitHub一覧取得失敗: ${response.status}`);
   const items = await response.json();
   return items.filter((item) => item.type === "file" && item.name.endsWith(".html") && item.name !== "index.html");
+}
+
+async function githubGit(token, path, init = {}) {
+  const response = await fetch(`https://api.github.com/repos/${REPOSITORY}${path}`, {
+    ...init,
+    headers: { ...githubHeaders(token), ...(init.headers || {}) },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(body.message || `GitHub更新失敗: ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return body;
+}
+
+async function replaceAll(project, from, to, token) {
+  // 同時編集が起きても、最新コミットから読み直して一度だけ安全に再試行する。
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const ref = await githubGit(token, `/git/ref/heads/${encodeURIComponent(BRANCH)}`);
+    const parentSha = ref.object.sha;
+    const items = await listHtml(project, token, parentSha);
+    const currentFiles = await Promise.all(items.map(async (item) => ({
+      filename: item.name,
+      current: await githubGet(project, item.name, token, parentSha),
+    })));
+    const changes = [];
+    let count = 0;
+    for (const { filename, current } of currentFiles) {
+      const source = fromBase64(current.content);
+      const replaced = source.split(from).join(to);
+      if (replaced === source) continue;
+      count += source.split(from).length - 1;
+      changes.push({ path: `${project}/${filename}`, mode: "100644", type: "blob", content: replaced });
+    }
+    if (!changes.length) return { count: 0, files: 0, commit: null };
+
+    const parent = await githubGit(token, `/git/commits/${encodeURIComponent(parentSha)}`);
+    const tree = await githubGit(token, "/git/trees", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ base_tree: parent.tree.sha, tree: changes }),
+    });
+    const commit = await githubGit(token, "/git/commits", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        message: `図解HTMLを全ページ置換: ${project}/${from}`,
+        tree: tree.sha,
+        parents: [parentSha],
+      }),
+    });
+    try {
+      await githubGit(token, `/git/refs/heads/${encodeURIComponent(BRANCH)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sha: commit.sha, force: false }),
+      });
+      return { count, files: changes.length, commit: commit.sha };
+    } catch (error) {
+      if (attempt === 0 && error?.status === 422) continue;
+      throw error;
+    }
+  }
+  throw new Error("同時編集が続いているため、全ページ置換を再試行してください");
+}
+
+async function serveLatestHtml(url, env) {
+  const parts = url.pathname.split("/").filter(Boolean).map((part) => decodeURIComponent(part));
+  if (parts.length !== 2) return null;
+  const [project, filename] = parts;
+  if (!safeProject(project) || !/^[^/\\]+\.html$/.test(filename) || filename === "index.html" || !env.GITHUB_TOKEN) return null;
+  try {
+    const current = await githubGet(project, filename, env.GITHUB_TOKEN, BRANCH);
+    return new Response(fromBase64(current.content), {
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store, max-age=0",
+        "x-content-type-options": "nosniff",
+      },
+    });
+  } catch {
+    // GitHub到達不能時だけ、直近のCloudflare静的配信へ安全に戻す。
+    return null;
+  }
 }
 
 async function handleSave(request, env) {
@@ -128,20 +214,8 @@ async function handleSave(request, env) {
     const project = projectFromRequest(request, payload);
     if (payload.operation === "replace") {
       if (typeof payload.from !== "string" || !payload.from) return json(env, 400, { ok: false, error: "検索語が空です" });
-      const items = await listHtml(project, env.GITHUB_TOKEN);
-      let count = 0;
-      const commits = [];
-      for (const item of items) {
-        const current = await githubGet(project, item.name, env.GITHUB_TOKEN);
-        const source = fromBase64(current.content);
-        const replaced = source.split(payload.from).join(typeof payload.to === "string" ? payload.to : "");
-        if (replaced !== source) {
-          const result = await githubPut(project, item.name, replaced, current.sha, env.GITHUB_TOKEN, `図解HTMLを全ページ置換: ${project}/${payload.from}`);
-          count += source.split(payload.from).length - 1;
-          commits.push(result.commit?.sha || null);
-        }
-      }
-      return json(env, 200, { ok: true, count, commits });
+      const result = await replaceAll(project, payload.from, typeof payload.to === "string" ? payload.to : "", env.GITHUB_TOKEN);
+      return json(env, 200, { ok: true, project, ...result });
     }
 
     if (typeof payload.filename !== "string" || typeof payload.source !== "string") {
@@ -164,6 +238,8 @@ export default {
     if (/^\/\d{2}_.+\.html$/.test(url.pathname)) {
       return Response.redirect(`${PRODUCTION_ORIGIN}/${DEFAULT_PROJECT}${url.pathname}`, 302);
     }
+    const latestHtml = await serveLatestHtml(url, env);
+    if (latestHtml) return latestHtml;
     return env.ASSETS.fetch(request);
   },
 };
