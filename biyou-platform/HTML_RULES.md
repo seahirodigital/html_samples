@@ -28,6 +28,8 @@
 17. 公開経路は `開発 → GitHub main → Cloudflare Pages htmlviewer-hcy` とする。公開URLは `https://htmlviewer-hcy.pages.dev/biyou-platform/`。Cloudflare Dashboardの手動アップロードや旧 `html-viewer` へ公開しない。編集保存後のGitHubコミットをCloudflareの自動デプロイ完了まで確認し、古いデプロイを最新版として扱わない。
 
 18. 今後の案件はGitHubリポジトリ直下に案件名の小文字ハイフン区切りフォルダを追加し、HTML一式をその配下へ置く。HTMLの相対リンクと保存WorkerはURL第1階層を自動利用するため、案件ごとにCloudflare Pagesプロジェクトを作り直さない。
+19. サービス全体像は、クリニック向け・運営本部向け・一般ユーザー向けの三つのプロダクトを分けて示す。予約・来院・売上・顧客分析データが接続すること、各プロダクトを単体でも導入できることを併記する。
+20. CRM分析は、新規・既存、RFM、コホート、デシル、LTV、ABCの6手法から、自動集計、AIによる施策候補、院側承認を伴うコンサル提案へ進む四段階で表す。AIに医療判断、価格、顧客送信の最終決定をさせない。
 
 ## 変更履歴
 
@@ -39,3 +41,4 @@
 - 2026-10-02：保存の遅延を廃止し、保存中の画面移動待機、ローカル／Live Serverからの本番自動遷移、外部注入要素の保存除外を追加。
 - 2026-10-03：Netlifyのクレジット上限を受け、既存JAViewと分離したCloudflare Pages `htmlviewer-hcy` のGitHub連携へ移行。保存WorkerのGitHub Secret運用を追加。
 - 2026-10-03：プロジェクト単位のURLを `https://htmlviewer-hcy.pages.dev/<project>/` に統一し、美容プラットフォームHTMLを `biyou-platform/` へ移行。既存のGitHub編集コミットを保持したまま移設する。
+- 2026-10-03：サービス概要とCRM分析・コンサル価値連鎖を追加し、クリニック／本部／一般ユーザーの三プロダクトと、分析単体からCRMコンサルへ進む提供範囲を明文化。
