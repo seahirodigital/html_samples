@@ -91,7 +91,7 @@ async function githubPut(project, filename, source, sha, token, message) {
 }
 
 async function saveOne(project, filename, source, token) {
-  if (!/^\d{2}_.+\.html$/.test(filename) && filename !== "00_図解ナビゲーション.html") {
+  if (typeof filename !== "string" || !/^[^/\\]+\.html$/.test(filename) || filename === "index.html") {
     throw new Error("保存対象外のファイル名です");
   }
   const current = await githubGet(project, filename, token);
