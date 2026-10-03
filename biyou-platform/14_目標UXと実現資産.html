@@ -21,15 +21,15 @@ body.fullscreen-mode .slide:after{right:0}
 @media (max-width:767px){
   .slide .editor{display:none}
   .fullscreen-trigger-mobile{position:absolute;right:28px;top:150px;z-index:35;display:grid;width:560px;height:240px;place-items:center;border:2px solid var(--ink);border-radius:0;background:var(--ink);color:#fff;font:700 44px "Hiragino Sans","Yu Gothic",Meiryo,sans-serif;line-height:1.1;cursor:pointer}
-  body.fullscreen-mode .fullscreen-trigger-mobile{display:grid;right:20px;top:20px;width:220px;height:80px;border:1px solid var(--ink);font-size:18px}
+  body.fullscreen-mode .fullscreen-trigger-mobile{position:absolute;display:grid;right:20px;top:20px;width:220px;height:80px;border:1px solid var(--ink);font-size:18px}
   body.fullscreen-mode .slide .editor{display:none}
   body.fullscreen-mode .rotate-hint{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(32,32,32,.82);color:#fff;font:700 20px "Hiragino Sans","Yu Gothic",Meiryo,sans-serif;text-align:center;pointer-events:none}
 }
 @media (max-height:500px){
-  body.fullscreen-mode .fullscreen-trigger-mobile{display:grid;right:20px;top:20px;width:220px;height:80px;border:1px solid var(--ink);font-size:18px}
+  body.fullscreen-mode .fullscreen-trigger-mobile{position:absolute;display:grid;right:20px;top:20px;width:220px;height:80px;border:1px solid var(--ink);font-size:18px}
   body.fullscreen-mode .slide .editor{display:none}
 }
-@media (min-width:768px) and (max-width:1199px){
+@media (min-width:768px) and (min-height:501px) and (max-width:1199px){
   .slide .editor .fullscreen-trigger-tablet{display:block;min-width:170px;height:80px;padding:0 18px;font-size:22px;line-height:76px}
   body.fullscreen-mode .slide .editor{right:16px;bottom:16px;display:flex;padding:0;border:0;background:transparent}
   body.fullscreen-mode .slide .editor .fullscreen-trigger-tablet{display:block;min-width:170px;height:72px;background:rgba(247,246,242,.94);font-size:18px;line-height:68px}
