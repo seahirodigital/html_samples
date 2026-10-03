@@ -2,12 +2,12 @@
 
 ## 正本と保存
 
-1. 編集の正本はこのGitHubリポジトリの `biyou_platform/`。Cloudflare PagesはGitHub `main` の配信先であり、ローカルHTML・ブラウザ・OneDrive同期を正本にしない。
-2. モーダル編集、追加、削除、ページ内置換、全ページ置換は、操作確定と同時にCloudflare Pagesの `_worker.js` `/api/save` 経由でGitHub Contents APIへ保存する。保存先は `https://github.com/seahirodigital/html_samples/tree/main/biyou_platform/` のみとする。保存要求は直列化し、保存完了前のページ移動は完了確認まで待機させる。
+1. 編集の正本はこのGitHubリポジトリの `biyou-platform/`。Cloudflare PagesはGitHub `main` の配信先であり、ローカルHTML・ブラウザ・OneDrive同期を正本にしない。
+2. モーダル編集、追加、削除、ページ内置換、全ページ置換は、操作確定と同時にCloudflare Pagesのルート `_worker.js` `/api/save` 経由でGitHub Contents APIへ保存する。美容プラットフォームの保存先は `https://github.com/seahirodigital/html_samples/tree/main/biyou-platform/` とし、リクエスト元URLの1階層目をプロジェクトフォルダとして扱う。保存要求は直列化し、保存完了前のページ移動は完了確認まで待機させる。
 3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次の並び順とカード／サムネイル表示モードだけに限定する。
 4. 保存失敗時はローカルへ退避せず、失敗を表示して再試行する。GitHubのコミット履歴を復旧点とし、古いブラウザ値を正本として復元しない。
 5. 生成スクリプトは通常実行で既存HTMLを上書きしない。初期再生成・構造変更時だけ明示的な `--regenerate` を使い、その後GitHubへ確認コミットする。
-6. HTMLは常にクラウド最新版を取得する。`HTML_viewer/_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://htmlviewer-hcy.pages.dev/` へ自動遷移させ、ローカル経由の編集を発生させない。
+6. HTMLは常にクラウド最新版を取得する。リポジトリルートの `_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://htmlviewer-hcy.pages.dev/biyou-platform/` へ自動遷移させ、ローカル経由の編集を発生させない。
 7. 保存時はブラウザ拡張・Netlify HUD等の注入要素をHTMLから除外する。画面拡大率、ツールバー状態、外部iframeを正本へ混入させない。既存のJAView（`jaview.pages.dev`）と同じPagesプロジェクトへ配置しない。
 
 ## UIと操作
@@ -25,7 +25,9 @@
 14. マトリクスはX軸名を中央下、Y軸名を中央左に置き、プロット領域を正方形に近づける。母数円は相対区分であることを明記する。
 15. 図形の角丸を使わず、工程順は左上の円形番号、概念・フェーズ・ゲートは左上の小さな長方形ラベルで表す。予約課題は「即時予約未確定」、解決状態は「即時予約確定」とする。
 16. 各ページの見出しは `【分析・図表種別】分析結果`、サブラインは `So What：実行・判断`。事実、内部仮説、要決裁を混同しない。
-17. 公開経路は `開発 → GitHub main → Cloudflare Pages htmlviewer-hcy` とする。Cloudflare Dashboardの手動アップロードや旧 `html-viewer` へ公開しない。編集保存後のGitHubコミットをCloudflareの自動デプロイ完了まで確認し、古いデプロイを最新版として扱わない。
+17. 公開経路は `開発 → GitHub main → Cloudflare Pages htmlviewer-hcy` とする。公開URLは `https://htmlviewer-hcy.pages.dev/biyou-platform/`。Cloudflare Dashboardの手動アップロードや旧 `html-viewer` へ公開しない。編集保存後のGitHubコミットをCloudflareの自動デプロイ完了まで確認し、古いデプロイを最新版として扱わない。
+
+18. 今後の案件はGitHubリポジトリ直下に案件名の小文字ハイフン区切りフォルダを追加し、HTML一式をその配下へ置く。HTMLの相対リンクと保存WorkerはURL第1階層を自動利用するため、案件ごとにCloudflare Pagesプロジェクトを作り直さない。
 
 ## 変更履歴
 
@@ -36,3 +38,4 @@
 - HTMLキャッシュを無効化し、別端末でもGitHubに保存された最新版をCloudflare Pagesから表示。
 - 2026-10-02：保存の遅延を廃止し、保存中の画面移動待機、ローカル／Live Serverからの本番自動遷移、外部注入要素の保存除外を追加。
 - 2026-10-03：Netlifyのクレジット上限を受け、既存JAViewと分離したCloudflare Pages `htmlviewer-hcy` のGitHub連携へ移行。保存WorkerのGitHub Secret運用を追加。
+- 2026-10-03：プロジェクト単位のURLを `https://htmlviewer-hcy.pages.dev/<project>/` に統一し、美容プラットフォームHTMLを `biyou-platform/` へ移行。既存のGitHub編集コミットを保持したまま移設する。
