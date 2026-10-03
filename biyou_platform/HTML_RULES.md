@@ -7,7 +7,7 @@
 3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次の並び順とカード／サムネイル表示モードだけに限定する。
 4. 保存失敗時はローカルへ退避せず、失敗を表示して再試行する。GitHubのコミット履歴を復旧点とし、古いブラウザ値を正本として復元しない。
 5. 生成スクリプトは通常実行で既存HTMLを上書きしない。初期再生成・構造変更時だけ明示的な `--regenerate` を使い、その後GitHubへ確認コミットする。
-6. HTMLは常にクラウド最新版を取得する。`HTML_viewer/_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://html-viewer-ea6.pages.dev/` へ自動遷移させ、ローカル経由の編集を発生させない。
+6. HTMLは常にクラウド最新版を取得する。`HTML_viewer/_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://htmlviewer-hcy.pages.dev/` へ自動遷移させ、ローカル経由の編集を発生させない。
 7. 保存時はブラウザ拡張・Netlify HUD等の注入要素をHTMLから除外する。画面拡大率、ツールバー状態、外部iframeを正本へ混入させない。既存のJAView（`jaview.pages.dev`）と同じPagesプロジェクトへ配置しない。
 
 ## UIと操作
@@ -34,4 +34,4 @@
 - 編集本文の保存をローカルからクラウドGitHub正本へ移行。
 - HTMLキャッシュを無効化し、別端末でもGitHubに保存された最新版をCloudflare Pagesから表示。
 - 2026-10-02：保存の遅延を廃止し、保存中の画面移動待機、ローカル／Live Serverからの本番自動遷移、外部注入要素の保存除外を追加。
-- 2026-10-03：Netlifyのクレジット上限を受け、既存JAViewと分離したCloudflare Pages `html-viewer` へ移行。保存WorkerのGitHub Secret運用を追加。
+- 2026-10-03：Netlifyのクレジット上限を受け、既存JAViewと分離したCloudflare Pages `htmlviewer-hcy` のGitHub連携へ移行。保存WorkerのGitHub Secret運用を追加。
