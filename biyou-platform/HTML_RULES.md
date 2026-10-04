@@ -34,6 +34,7 @@
 23. 目次順の正本は `biyou-platform/toc-state.json` であり、Cloudflare Workerの `/api/toc-state` と `/api/save`（`operation: toc-order`）を経由してGitHubへ即時保存する。PCとスマホで別順を持たず、今回のWeb順を初期順として採用する。以後は最後にクラウドへ確定保存された変更を全端末が読み直す。端末固有localStorageの旧順は参照・復元しない。
 24. 全ページのviewportは `user-scalable=yes`、`maximum-scale=5` を指定する。スマホのレスポンシブ表示では、ピンチアウト／インによる拡大・縮小を阻害しない。原図・表・カードの可読性を優先し、`touch-action:none`、`touch-action:pan-y`、`user-scalable=no`、又は最大倍率1を指定してはならない。レスポンシブ時の `html`・`body` は `touch-action:auto` を明示し、ブラウザ標準のピンチズームを優先する。
 25. 閲覧HTMLはWorker内でGitHub Contents APIのbase64を復号しない。GitHubのraw表現をストリーム転送し、GitHub `main` の最新本文を正本として表示する。Workerは保存・目次同期APIだけを処理し、巨大HTMLの同時閲覧でCPU・メモリ上限へ到達させない。GitHub取得不能時だけCloudflare Pagesの静的配信へ安全にフォールバックする。
+26. スマホ目次はサムネイルを初期表示とし、PCのカード／サムネイル設定とは別に保持する。切替ボタンはスマホ時にナビゲーション行の左端へ移し、前へ・一覧・次へと同じヘッダー行に置く。目次のモバイルヘッダーから「VISUAL INDEX」と用途説明を表示せず、空いた領域はカード開始位置の上詰めへ使う。
 
 ## 変更履歴
 
