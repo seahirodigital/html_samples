@@ -2,10 +2,11 @@ const REPOSITORY = "seahirodigital/html_samples";
 const BRANCH = "main";
 const DEFAULT_PROJECT = "biyou-platform";
 const PRODUCTION_ORIGIN = "https://htmlviewer-hcy.pages.dev";
+const TOC_STATE_FILE = "toc-state.json";
 
 const CORS_HEADERS = {
   "access-control-allow-origin": PRODUCTION_ORIGIN,
-  "access-control-allow-methods": "POST, OPTIONS",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
   "access-control-allow-headers": "content-type",
   "cache-control": "no-store",
 };
@@ -100,6 +101,42 @@ async function saveOne(project, filename, source, token) {
   if (currentSource === source) return { filename, changed: false, commit: null };
   const result = await githubPut(project, filename, source, current.sha, token, `図解HTMLを保存: ${project}/${filename}`);
   return { filename, changed: true, commit: result.commit?.sha || null };
+}
+
+function validTocOrder(order) {
+  return Array.isArray(order)
+    && order.length > 1
+    && order.length <= 100
+    && new Set(order).size === order.length
+    && order.every((filename) => typeof filename === "string" && /^[^/\\]+\.html$/.test(filename));
+}
+
+async function readTocState(project, token) {
+  try {
+    const current = await githubGet(project, TOC_STATE_FILE, token);
+    const state = JSON.parse(fromBase64(current.content));
+    return { current, state: validTocOrder(state?.order) ? state : null };
+  } catch {
+    return { current: null, state: null };
+  }
+}
+
+async function saveTocOrder(project, order, token) {
+  if (!validTocOrder(order)) throw new Error("目次順が不正です");
+  // PCとスマホから近接して更新された場合も、GitHubの最新SHAを読み直して一度再試行する。
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const { current } = await readTocState(project, token);
+    const updatedAt = new Date().toISOString();
+    const source = JSON.stringify({ version: 1, order, updatedAt }, null, 2) + "\n";
+    try {
+      const result = await githubPut(project, TOC_STATE_FILE, source, current?.sha, token, `図解HTMLの目次順を同期: ${project}`);
+      return { order, updatedAt, commit: result.commit?.sha || null };
+    } catch (error) {
+      if (attempt === 0) continue;
+      throw error;
+    }
+  }
+  throw new Error("目次順を保存できませんでした");
 }
 
 async function listHtml(project, token, ref = BRANCH) {
@@ -212,6 +249,10 @@ async function handleSave(request, env) {
 
   try {
     const project = projectFromRequest(request, payload);
+    if (payload.operation === "toc-order") {
+      const result = await saveTocOrder(project, payload.order, env.GITHUB_TOKEN);
+      return json(env, 200, { ok: true, project, ...result });
+    }
     if (payload.operation === "replace") {
       if (typeof payload.from !== "string" || !payload.from) return json(env, 400, { ok: false, error: "検索語が空です" });
       const result = await replaceAll(project, payload.from, typeof payload.to === "string" ? payload.to : "", env.GITHUB_TOKEN);
@@ -228,10 +269,21 @@ async function handleSave(request, env) {
   }
 }
 
+async function handleTocState(request, env) {
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (request.method !== "GET") return json(env, 405, { ok: false, error: "GET only" });
+  if (!env.GITHUB_TOKEN) return json(env, 500, { ok: false, error: "GITHUB_TOKEN未設定" });
+  const url = new URL(request.url);
+  const project = safeProject(url.searchParams.get("project")) || projectFromRequest(request, null);
+  const { state } = await readTocState(project, env.GITHUB_TOKEN);
+  return json(env, 200, { ok: true, project, order: state?.order || null, updatedAt: state?.updatedAt || null });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/save") return handleSave(request, env);
+    if (url.pathname === "/api/toc-state") return handleTocState(request, env);
     if (url.pathname === "/" || url.pathname === "/biyou-platform" || url.pathname === "/biyou-platform/") {
       return Response.redirect(`${PRODUCTION_ORIGIN}/${DEFAULT_PROJECT}/00_%E5%9B%B3%E8%A7%A3%E3%83%8A%E3%83%93%E3%82%B2%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3.html`, 302);
     }

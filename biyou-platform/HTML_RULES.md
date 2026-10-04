@@ -2,9 +2,9 @@
 
 ## 正本と保存
 
-1. 編集の正本はこのGitHubリポジトリの `biyou_platform/`。Cloudflare PagesはGitHub `main` の配信先であり、ローカルHTML・ブラウザ・OneDrive同期を正本にしない。
-2. モーダル編集、追加、削除、ページ内置換、全ページ置換は、操作確定と同時にCloudflare Pagesの `_worker.js` `/api/save` 経由でGitHub Contents APIへ保存する。保存先は `https://github.com/seahirodigital/html_samples/tree/main/biyou_platform/` のみとする。保存要求は直列化し、保存完了前のページ移動は完了確認まで待機させる。
-3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次の並び順とカード／サムネイル表示モードだけに限定する。閲覧方式の保存・切替は行わない。
+1. 編集の正本はこのGitHubリポジトリの `biyou-platform/`。Cloudflare PagesはGitHub `main` の配信先であり、ローカルHTML・ブラウザ・OneDrive同期を正本にしない。
+2. モーダル編集、追加、削除、ページ内置換、全ページ置換は、操作確定と同時にCloudflare Pagesの `_worker.js` `/api/save` 経由でGitHub Contents APIへ保存する。保存先は `https://github.com/seahirodigital/html_samples/tree/main/biyou-platform/` のみとする。保存要求は直列化し、保存完了前のページ移動は完了確認まで待機させる。
+3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次のカード／サムネイル表示モードだけに限定する。閲覧方式の保存・切替は行わない。
 4. 保存失敗時はローカルへ退避せず、失敗を表示して再試行する。GitHubのコミット履歴を復旧点とし、古いブラウザ値を正本として復元しない。
 5. 生成スクリプトは通常実行で既存HTMLを上書きしない。初期再生成・構造変更時だけ明示的な `--regenerate` を使い、その後GitHubへ確認コミットする。
 6. HTMLは常にクラウド最新版を取得する。`HTML_viewer/_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://htmlviewer-hcy.pages.dev/biyou-platform/` へ自動遷移させ、ローカル経由の編集を発生させない。
@@ -30,6 +30,8 @@
 19. 目次カード・サムネイルの表示名は、各ページSVG上部の実ヘッダーを正本とする。固定の短縮名へ戻さず、並べ替え状態・表示クラス・動的生成した目次カードをHTML本文へ保存しない。
 20. スマホの目次は縦長レスポンシブ表示とし、カード／サムネイル・タッチ並べ替えを提供する。スマホの各ページはレスポンシブ表示を既定かつ固定とし、PC・タブレットを含む全端末で16:9／レスポンシブ切替を表示しない。PC・タブレットは16:9、スマホはレスポンシブ読みとする。レスポンシブ時は原図を必ず上段、説明を下段、表・詳細図は横スクロール可能な拡大原図も併用する。`html`・`body`・`slide` の固定高及び `overflow:hidden` をレスポンシブ時に必ず解除し、実機の縦スクロールを確認する。
 21. 再生成時も `RESPONSIVE_READING_V5` の共通CSS・ランタイムを必ず保持する。16:9のSVGだけを再生成してレスポンシブUIを欠落させてはならない。目次はカードとサムネイルの双方でグリッド行高・カード高を一致させ、重なりを許さない。マウスのドラッグとスマホのタッチ操作の双方で並べ替え可能にし、サムネイルは静的SVGを表示、データURIの読込失敗時には対象HTMLからSVGを再取得して自動復旧する。動的なレスポンシブ領域・開いた編集モーダルは、保存時にHTML本文へ混入させず、読込時に再生成する。
+22. 目次のカード／サムネイル題名は `diagram-manifest` の固定文字列ではなく、各HTMLのSVG上部にある実ヘッダーから表示の都度再取得する。スライドヘッダーをクラウド保存した後に一覧を開けば、その実ヘッダーが一覧題名・ページタイトルへ反映される。manifestの題名は通信失敗時だけの表示フォールバックとする。
+23. 目次順の正本は `biyou-platform/toc-state.json` であり、Cloudflare Workerの `/api/toc-state` と `/api/save`（`operation: toc-order`）を経由してGitHubへ即時保存する。PCとスマホで別順を持たず、今回のWeb順を初期順として採用する。以後は最後にクラウドへ確定保存された変更を全端末が読み直す。端末固有localStorageの旧順は参照・復元しない。
 
 ## 変更履歴
 
