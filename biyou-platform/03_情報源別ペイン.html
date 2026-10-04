@@ -175,8 +175,8 @@ window.addEventListener('pagehide',resetTransientEditor);window.addEventListener
   const filename=slide.dataset.file||'';
   const isIndex=filename==='00_図解ナビゲーション.html';
   const mobile=()=>matchMedia('(max-width:767px)').matches;
-  const getMode=()=>localStorage.getItem(responsiveKey)==='responsive'?'responsive':'slide';
-  const setMode=mode=>{localStorage.setItem(responsiveKey,mode);applyMode()};
+  const getMode=()=>{const requested=new URLSearchParams(location.search).get('view');if(requested==='responsive'||requested==='slide')return requested;return localStorage.getItem(responsiveKey)==='responsive'?'responsive':'slide'};
+  const setMode=mode=>{localStorage.setItem(responsiveKey,mode);const url=new URL(location.href);url.searchParams.delete('view');history.replaceState(null,'',url);applyMode()};
   const textOf=node=>(node?.textContent||'').replace(/\s+/g,' ').trim();
   const number=v=>Number.parseFloat(v||'0')||0;
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
