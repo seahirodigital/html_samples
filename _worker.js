@@ -239,6 +239,7 @@ async function serveLatestHtml(url, env) {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store, max-age=0",
         "x-content-type-options": "nosniff",
+        "x-htmlviewer-delivery": "github-raw-stream-v1",
       },
     });
   } catch {
