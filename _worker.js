@@ -74,6 +74,20 @@ async function githubGet(project, filename, token, ref) {
   return response.json();
 }
 
+// 閲覧時はContents APIのJSON/base64をWorkerで展開しない。
+// GitHubにraw表現を要求し、本文ストリームをそのまま利用者へ渡す。
+// これにより目次で多数のHTMLを同時取得してもWorkerのCPU・メモリを消費しない。
+async function githubRawHtml(project, filename, token, ref) {
+  const response = await fetch(githubUrl(project, filename, ref), {
+    headers: { ...githubHeaders(token), accept: "application/vnd.github.raw+json" },
+    cache: "no-store",
+  });
+  if (!response.ok || !response.body) {
+    throw new Error(`GitHub raw取得失敗: ${response.status}`);
+  }
+  return response;
+}
+
 async function githubPut(project, filename, source, sha, token, message) {
   const response = await fetch(githubUrl(project, filename), {
     method: "PUT",
@@ -219,8 +233,8 @@ async function serveLatestHtml(url, env) {
   const [project, filename] = parts;
   if (!safeProject(project) || !/^[^/\\]+\.html$/.test(filename) || filename === "index.html" || !env.GITHUB_TOKEN) return null;
   try {
-    const current = await githubGet(project, filename, env.GITHUB_TOKEN, BRANCH);
-    return new Response(fromBase64(current.content), {
+    const current = await githubRawHtml(project, filename, env.GITHUB_TOKEN, BRANCH);
+    return new Response(current.body, {
       headers: {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store, max-age=0",
