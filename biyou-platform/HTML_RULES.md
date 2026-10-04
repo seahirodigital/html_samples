@@ -4,10 +4,10 @@
 
 1. 編集の正本はこのGitHubリポジトリの `biyou_platform/`。Cloudflare PagesはGitHub `main` の配信先であり、ローカルHTML・ブラウザ・OneDrive同期を正本にしない。
 2. モーダル編集、追加、削除、ページ内置換、全ページ置換は、操作確定と同時にCloudflare Pagesの `_worker.js` `/api/save` 経由でGitHub Contents APIへ保存する。保存先は `https://github.com/seahirodigital/html_samples/tree/main/biyou_platform/` のみとする。保存要求は直列化し、保存完了前のページ移動は完了確認まで待機させる。
-3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次の並び順とカード／サムネイル表示モードだけに限定する。
+3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次の並び順、カード／サムネイル表示モード、16:9／レスポンシブ閲覧表示方式だけに限定する。
 4. 保存失敗時はローカルへ退避せず、失敗を表示して再試行する。GitHubのコミット履歴を復旧点とし、古いブラウザ値を正本として復元しない。
 5. 生成スクリプトは通常実行で既存HTMLを上書きしない。初期再生成・構造変更時だけ明示的な `--regenerate` を使い、その後GitHubへ確認コミットする。
-6. HTMLは常にクラウド最新版を取得する。`HTML_viewer/_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://htmlviewer-hcy.pages.dev/` へ自動遷移させ、ローカル経由の編集を発生させない。
+6. HTMLは常にクラウド最新版を取得する。`HTML_viewer/_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://htmlviewer-hcy.pages.dev/biyou-platform/` へ自動遷移させ、ローカル経由の編集を発生させない。
 7. 保存時はブラウザ拡張・Netlify HUD等の注入要素をHTMLから除外する。画面拡大率、ツールバー状態、外部iframeを正本へ混入させない。既存のJAView（`jaview.pages.dev`）と同じPagesプロジェクトへ配置しない。
 
 ## UIと操作
@@ -36,3 +36,7 @@
 - HTMLキャッシュを無効化し、別端末でもGitHubに保存された最新版をCloudflare Pagesから表示。
 - 2026-10-02：保存の遅延を廃止し、保存中の画面移動待機、ローカル／Live Serverからの本番自動遷移、外部注入要素の保存除外を追加。
 - 2026-10-03：Netlifyのクレジット上限を受け、既存JAViewと分離したCloudflare Pages `htmlviewer-hcy` のGitHub連携へ移行。保存WorkerのGitHub Secret運用を追加。
+- 2026-10-04：公開経路を `開発 → GitHub main → Cloudflare Pages htmlviewer-hcy` に固定し、HTMLをGitHubリポジトリ直下の案件別小文字ハイフン区切りフォルダ（美容プラットフォームは `biyou-platform/`）へ配置する。
+- 2026-10-04：サービス全体像はクリニック向け・運営本部向け・一般ユーザー向けの3プロダクトを分け、単体導入とデータ接続を併記する。CRM分析は新規／既存、RFM、コホート、デシル、LTV、ABCの6手法から自動集計、AI施策候補、院側承認付きコンサル提案へ進める。
+- 2026-10-04：スマホの目次は常にレスポンシブ縦長、各ページは16:9／レスポンシブを切替可能とし、レスポンシブでは原図を上段、説明を下段、表は横スクロールで表示する。フルビューはタブレット中心とし、スマホでは横向きフルビューボタンを表示しない。
+- 2026-10-04：M&A戦略は直営クリニックの単位採算、外部150院への月額SaaS、SOTP評価、複数インダストリーへの売却候補を一枚で接続し、数値は仮説値として扱う。
