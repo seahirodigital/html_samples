@@ -9,6 +9,7 @@
 
 
 
+
 /* RESPONSIVE_READING_V5 */
 /* 表示方式の切替は廃止。PCは16:9、スマホはレスポンシブ読みに固定する。 */
 .nav-reading-toggle{display:none!important}
@@ -117,6 +118,8 @@ window.addEventListener('pagehide',resetTransientEditor);window.addEventListener
 
 
 
+
+
 <script data-deck-sync-v1>
 (()=>{
   const slide=document.querySelector('.slide'),manifest=window.__beautyManifest;
@@ -135,6 +138,9 @@ window.addEventListener('pagehide',resetTransientEditor);window.addEventListener
   const refreshTitles=async()=>{if(filename!=='00_図解ナビゲーション.html')return;let changed=false;await Promise.all(manifest.filter(item=>item.file!==filename).map(async item=>{try{const response=await fetch(`${encodeURIComponent(item.file)}?toc-title=${Date.now()}`,{cache:'no-store'});if(!response.ok)return;const title=titleFromHtml(await response.text(),item.title);if(title&&title!==item.title){item.title=title;changed=true}}catch(_){/* 表示済みの見出しをフォールバックとして維持する。 */}}));if(changed)window.dispatchEvent(new Event('beauty-title-sync'))};
   loadOrder();
   refreshTitles();
+  // 別端末で最後に確定したクラウド順を、タブへ戻った時にも読み直す。
+  addEventListener('pageshow',()=>{loadOrder();refreshTitles()});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadOrder();refreshTitles()}});
 })();
 </script>
 </body></html>
