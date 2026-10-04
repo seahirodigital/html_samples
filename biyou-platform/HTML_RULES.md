@@ -4,7 +4,7 @@
 
 1. 編集の正本はこのGitHubリポジトリの `biyou-platform/`。Cloudflare PagesはGitHub `main` の配信先であり、ローカルHTML・ブラウザ・OneDrive同期を正本にしない。
 2. モーダル編集、追加、削除、ページ内置換、全ページ置換は、操作確定と同時にCloudflare Pagesのルート `_worker.js` `/api/save` 経由でGitHub Contents APIへ保存する。美容プラットフォームの保存先は `https://github.com/seahirodigital/html_samples/tree/main/biyou-platform/` とし、リクエスト元URLの1階層目をプロジェクトフォルダとして扱う。保存要求は直列化し、保存完了前のページ移動は完了確認まで待機させる。
-3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次の並び順とカード／サムネイル表示モードだけに限定する。
+3. HTML本文・SVG・編集テキストを `localStorage`、ローカル自動保存サーバー、ブラウザの一時領域へ保存しない。`localStorage` は目次の並び順、カード／サムネイル表示モード、16:9／レスポンシブ閲覧表示方式だけに限定する。
 4. 保存失敗時はローカルへ退避せず、失敗を表示して再試行する。GitHubのコミット履歴を復旧点とし、古いブラウザ値を正本として復元しない。
 5. 生成スクリプトは通常実行で既存HTMLを上書きしない。初期再生成・構造変更時だけ明示的な `--regenerate` を使い、その後GitHubへ確認コミットする。
 6. HTMLは常にクラウド最新版を取得する。リポジトリルートの `_headers` でHTMLのブラウザ／CDNキャッシュを無効化し、既存タブの古いDOMを正本と扱わない。ローカルファイル又はLive Serverで開かれたHTMLは `https://htmlviewer-hcy.pages.dev/biyou-platform/` へ自動遷移させ、ローカル経由の編集を発生させない。
