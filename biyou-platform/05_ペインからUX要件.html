@@ -206,8 +206,10 @@ window.addEventListener('pagehide',resetTransientEditor);window.addEventListener
       if(hasInner&&inside.length>3)continue;
       candidates.push({r,inside});
     }
+    const panels=rects.filter(r=>r.y>=170&&r.w>=480&&r.w<1500&&r.h>=260).sort((a,b)=>a.x-b.x||a.y-b.y);
+    const panelIndex=c=>{const cx=c.r.x+c.r.w/2,cy=c.r.y+c.r.h/2;const index=panels.findIndex(p=>cx>=p.x&&cx<=p.x+p.w&&cy>=p.y&&cy<=p.y+p.h);return index<0?999:index};
     const unique=[];
-    for(const c of candidates.sort((a,b)=>a.r.y-b.r.y||a.r.x-b.r.x||a.r.w-b.r.w)){
+    for(const c of candidates.sort((a,b)=>{const pa=panelIndex(a),pb=panelIndex(b);return pa-pb||a.r.y-b.r.y||a.r.x-b.r.x||a.r.w-b.r.w})){
       const key=c.inside.map(t=>t.text).join('|');
       if(!unique.some(u=>u.key===key))unique.push({...c,key});
     }
